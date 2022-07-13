@@ -1,0 +1,56 @@
+#!/bin/bash
+
+function chat_help() {
+    echo "Uso: ./main <chat> [name]"
+    echo "Ejemplo: chat.sh chat1 john"
+}
+
+function setup() {
+    # If file $path exists
+    if [ -f $1 ]; then
+        # If the first line is #/bin/chat, then read it
+        if [ "$(head -n 1 $1)" != "#/bin/chat $2" ]; then
+            # If the first line is not #/bin/chat, then show error
+            echo "Error: El archivo $1 existe y no es un chat. Por razones de seguridad no se abrirá ni editará." 1>&2
+            exit 1
+        fi
+    else
+        # If the file does not exist, then create it
+        echo "Setting up chat $2"
+        echo "#/bin/chat $2" > $1
+    fi
+}
+
+function layout() {
+    session="chat$3as$2"
+
+    tmux has-session -t $session 2>/dev/null
+    if [ $? -ne 0 ]; then
+        tmux new -d -s $session -n "$3" "./conversation $1"
+        tmux split-window -l 1 "./textbar $2 $1; tmux kill-session -t $session"
+    fi
+
+    tmux attach-session -t $session
+}
+
+chat="$1"
+if [ -z "$chat" ] || [ "$chat" = "--help" ]; then
+    chat_help
+    exit 1
+fi
+
+file="./$chat.yml"
+
+name="$2"
+if [ -z "$name" ]; then
+    name="$USER"
+fi
+
+color=""
+if [ -n "$3" ]; then
+    color="$3"
+fi
+
+setup "$file" "$chat"
+
+layout "$file" "$name" "$chat"
