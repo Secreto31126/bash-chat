@@ -5,6 +5,10 @@ function chat_help() {
     echo "Ejemplo: chat.sh chat1 john"
 }
 
+function update() {
+    git pull
+}
+
 function setup() {
     # If file $path exists
     if [ -f $1 ]; then
@@ -37,6 +41,11 @@ chat="$1"
 if [ -z "$chat" ] || [ "$chat" = "--help" ]; then
     chat_help
     exit 1
+fi
+
+if [ "$chat" = "--update" ]; then
+    update
+    exit
 fi
 
 file="./$chat.yml"
