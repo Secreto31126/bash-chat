@@ -62,7 +62,6 @@ function cool() {
 
 # Moddifiers
 update=0
-insecure=0
 
 function main() {
     while true; do
