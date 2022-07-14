@@ -5,33 +5,50 @@ function chat_help() {
     echo "Ejemplo: chat.sh chat1 john"
 }
 
+function parse_yaml() {
+    local prefix=$2
+    local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+    sed -ne "s|^\($s\):|\1|" \
+        -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+    awk -F$fs '{
+        indent = length($1)/2;
+        vname[indent] = $2;
+        for (i in vname) {if (i > indent) {delete vname[i]}}
+        if (length($3) > 0) {
+            vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+            printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+        }
+    }'
+}
+
 function update() {
     git pull
 }
 
 function setup() {
     # If file $path exists
-    if [ -f $1 ]; then
+    if [ -f $file ]; then
         # If the first line is #/bin/chat, then read it
-        if [ "$(head -n 1 $1)" != "#/bin/chat $2" ]; then
+        if [ "$(head -n 1 $file)" != "#/bin/chat $chat" ]; then
             # If the first line is not #/bin/chat, then show error
-            echo "Error: El archivo $1 existe y no es un chat. Por razones de seguridad no se abrirá ni editará." 1>&2
+            echo "Error: El archivo $file existe y no es un chat. Por razones de seguridad no se abrirá ni editará." 1>&2
             exit 1
         fi
     else
         # If the file does not exist, then create it
-        echo "Setting up chat $2"
-        echo "#/bin/chat $2" > $1
+        echo "Setting up chat $chat"
+        echo "#/bin/chat $chat" > $file
     fi
 }
 
 function layout() {
-    session="chat$3as$2"
+    session="$chat-as-$name"
 
     tmux has-session -t $session 2>/dev/null
     if [ $? -ne 0 ]; then
-        tmux new -d -s $session -n "$3" "./conversation $1"
-        tmux split-window -l 1 "./textbar $2 $1; tmux kill-session -t $session"
+        tmux new -d -s $session -n "$chat" "./conversation $file"
+        tmux split-window -l 1 "./textbar $name $file $color; tmux kill-session -t $session"
     fi
 
     tmux attach-session -t $session
@@ -43,23 +60,35 @@ if [ -z "$chat" ] || [ "$chat" = "--help" ]; then
     exit 1
 fi
 
-if [ "$chat" = "--update" ]; then
+eval $(parse_yaml settings.yml "settings_")
+
+if [ "$chat" = "--update" ] || [ "$settings_updates_auto" = "true" ]; then
     update
-    exit
+    if [ "$chat" = "--update" ]; then
+        exit 0
+    fi
 fi
 
 file="./$chat.yml"
 
 name="$2"
 if [ -z "$name" ]; then
-    name="$USER"
+    if [ -n "$settings_name_username" ]; then
+        name="$settings_name_username"
+    else
+        name="$(whoami)"
+    fi
 fi
 
-color=""
-if [ -n "$3" ]; then
-    color="$3"
+# Replace the spaces with _
+chat="${chat// /_}"
+name="${name// /_}"
+
+color="$settings_name_color"
+if [ -z "$color" ]; then
+    color="/c"
 fi
 
-setup "$file" "$chat"
+setup
 
-layout "$file" "$name" "$chat"
+layout

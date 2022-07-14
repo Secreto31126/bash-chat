@@ -33,6 +33,11 @@ function refresh() {
                 continue
             fi
 
+            trailing_new_line_regex="\n$"
+            while [[ $line =~ $trailing_new_line_regex ]]; do
+                line=${line::-2}
+            done
+
             if [ "$insecure" -eq 1 ]; then
                 echo -e $line
             else
@@ -63,6 +68,25 @@ function auto() {
 function manual() {
     while true; do
         tmux wait REFRESH
+        refresh
+    done
+}
+
+function help() {
+    while true; do
+        tmux wait SHOW_HELP
+        echo "
+        exit - Salir del chat
+        /up - Subir una página
+        /down - Bajar una página
+        /top - Ir al principio
+        /bottom - Ir al final
+        /reaction [n] [emoji] - Reaccionar con un emoji
+        /[r/g/c/p][mensaje] - Cambia el color del mensaje
+        //[mensaje] - Cambia el color del texto a su color original
+        /help - Muestra este mensaje de ayuda
+        "
+        tmux wait HIDE_HELP
         refresh
     done
 }
@@ -115,6 +139,7 @@ function bottom() {
 
 auto &
 manual &
+help &
 up &
 down &
 top &
@@ -146,5 +171,3 @@ while true; do
         break
     fi
 done
-
-tmux kill-session -t Chat

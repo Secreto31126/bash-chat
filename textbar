@@ -2,6 +2,7 @@
 
 name="$1"
 path="$2"
+color="$3"
 
 BLACK='\033[0;30m'
 BLACK_BOLD='\033[1;30m'
@@ -71,13 +72,15 @@ function main() {
         history -s "$message"
 
         rainbow_regex="/rainbow *"
+        reaction_regex="^/react ([2-9]|[1-9][0-9]+) .+$"
 
         if [ "$message" = "exit" ]; then
             break
         
         elif [ "$message" = "/help" ]; then
             tmux wait -S SHOW_HELP
-            read -n 1 -s
+            clear
+            read -n 1 -s -p "Press any key to continue"
             tmux wait -S HIDE_HELP
             continue
         
@@ -95,6 +98,15 @@ function main() {
         
         elif [ "$message" = "/bottom" ]; then
             tmux wait -S BOTTOM
+            continue
+        
+        elif [[ "$message" =~ $reaction_regex ]]; then
+            number=$(echo $message | awk '{print $2}')
+            reaction=$(echo $message | awk '{print $3}')
+            is_emoji="true" # $(node emoji.js "$reaction")
+            if [ "$is_emoji" = "true" ]; then
+                sed -i "${number}s/$/$reaction/" $path
+            fi
             continue
         
         elif [[ "$message" =~ $rainbow_regex ]]; then
@@ -135,9 +147,8 @@ function main() {
 
         # If string is not empty, write to chat
         if [ -n "$message" ]; then
-            message=$(cool "/c$name//: $message")
-
-            echo "$message$NC" >> $path
+            message=$(cool "$color$name//: $message")
+            echo "$message$NC\\n" >> $path
         fi
 
         # Send a trigger to the chat window to refresh
@@ -145,15 +156,16 @@ function main() {
     done
 }
 
-echo $(color "/c$name//: Joined the chat") >> $path
+echo "$(color "$color$name//: Joined the chat")\\n" >> $path
 
 main
 
 if [ -f $path ]; then
-    echo $(color "/c$name//: Left the chat") >> $path
+    echo "$(color "$color$name//: Left the chat")\\n" >> $path
 fi
 
 if [ $update -eq 1 ]; then
     # $0 $name $path
     # tmux wait -S UPDATE
+    echo "Deprecated :)"
 fi
