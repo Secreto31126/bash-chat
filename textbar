@@ -70,8 +70,9 @@ function main() {
         read -e -p "$name: " message
         history -s "$message"
 
-        rainbow_regex="/rainbow *"
-        reaction_regex="^/react ([2-9]|[1-9][0-9]+) .+$"
+        reaction_regex="^/react ([2-9]|[1-9][0-9]+) .{1,2}$"
+        rainbow_regex="^/rainbow *$"
+        delete_regex="^/deleteAll( [Yy])?$"
 
         if [ "$message" = "exit" ]; then
             break
@@ -102,9 +103,13 @@ function main() {
         elif [[ "$message" =~ $reaction_regex ]]; then
             number=$(echo $message | awk '{print $2}')
             reaction=$(echo $message | awk '{print $3}')
-            is_emoji="true" # $(node emoji.js "$reaction")
-            if [ "$is_emoji" = "true" ]; then
-                sed -i "${number}s/$/$reaction/" $path
+            
+            length=${#reaction}
+            if [ $length -eq 1 ] || [ $length -eq 2 ]; then
+                sed -i "${number}s/$/$reaction /" $path
+            else
+                echo "Invalid reaction, it must be 1 or 2 characters long"
+                read -n 1 -s
             fi
             continue
         
@@ -112,13 +117,19 @@ function main() {
             message="${message/"/rainbow "/}"
             message=$(rainbow "$message")
         
-        elif [ "$message" = "/deleteAll" ]; then
-            clear
+        elif [[ "$message" =~ $delete_regex ]]; then
+            delete=1
+            if [ "$message" = "/deleteAll" ]; then # The simplest way to check if it doesn't have a second argument
+                clear
+                echo -n "You are about to delete the whole chat history for everyone. "
+                read -p "Are you sure you want to proceed? (y/N) " -n 1 -r
+                if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                    delete=0
+                fi
+            fi
 
-            echo -n "You are about to delete the whole chat history for everyone. "
-            read -p "Are you sure you want to proceed? (y/N) " -n 1 -r
-
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
+            # This won't be run if the second argument is not "[yY]" because it wouldn't match the first regex
+            if [ $delete -eq 1 ]; then
                 header=$(head -n 1 $path)
                 echo $header > $path
                 message="Chat history /rdeleted//"
@@ -127,11 +138,6 @@ function main() {
                 read -n 1 -s
                 continue
             fi
-
-        elif [ "$message" = "/deleteAll Y" ]; then
-            header=$(head -n 1 $path)
-            echo $header > $path
-            message="Chat history /rdeleted//"
         
         elif [ "$message" = "/update" ]; then
             update=1
