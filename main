@@ -49,8 +49,7 @@ function layout() {
 
     tmux has-session -t $session 2>/dev/null
     if [ $? -ne 0 ]; then
-        tmux new -d -s $session -n "$chat" "./display $chat_file $display_size $display_lines"
-        tmux split-window -l 1 "./textbar $name $chat_file $color; tmux kill-session -t $session"
+        ./layout $session $chat_file $name $color $display_size $display_lines
     fi
 
     tmux attach-session -t $session
