@@ -3,26 +3,30 @@
 # The chat file
 file="$1"
 
+# Modifiers
 # The number of lines to display
-size="$2"
+display_size="$2"
 
 # If 0, show as many lines as they fit in the screen
-if [ $size -eq 0 ]; then
+if [ $display_size -eq 0 ]; then
     size=$(tput lines)
 fi
 
-# If size is undefined, default to 20
-if [ -z "$size" ]; then
-    size=20
+# If size is still undefined, default to 20
+if [ -z "$display_size" ]; then
+    display_size=20
 fi
 
-# Mods
+size_file=$(mktemp)
+echo $display_size > $size_file
+
 # Will show higger lines/older messages, stored in a tmp file for global access
 upread_file=$(mktemp)
 echo 1 > "$upread_file"
 
-# It will modify the chat output to the display
-cat_mods_file="$3"
+# Shows or hides the number of each line
+display_lines_file=$(mktemp)
+echo "$3" > "$display_lines_file"
 
 function refresh() {
     clear
@@ -30,7 +34,10 @@ function refresh() {
     # Read and show the chat
     if [ -f "$file" ]; then
         upread=$(cat "$upread_file")
-        let position_bottom=$upread*$size-4 # It will hopefully offset the reactions lines
+        size=$(cat "$size_file")
+        display_lines=$(cat "$display_lines_file")
+
+        let position_bottom=$upread*$size
 
         if [ -z "$position_bottom" ]; then
             echo "Woops, something went wrong. If you have a settings.yml, make sure the file is in LF and not CRLF." 1>&2
@@ -39,8 +46,15 @@ function refresh() {
             exit 1
         fi
 
-        cat_mods=$(head -n 1 "$cat_mods_file")
-        
+        line_number=1
+        if [ $display_lines -eq 1 ]; then
+            total_lines=$(wc -l < "$file")
+            let line_number=$total_lines-$position_bottom
+            if [ $line_number -le 0 ]; then
+                line_number=1
+            fi
+        fi
+
         while read -r line; do
             # Prevent echoing empty lines, should not happen
             if [ -z "$line" ]; then
@@ -48,12 +62,17 @@ function refresh() {
             fi
 
             trailing_new_line_regex="\n$"
-            while [[ $line =~ $trailing_new_line_regex ]]; do
-                line=${line::-2}
+            while [[ "$line" =~ $trailing_new_line_regex ]]; do
+                line="${line::-2}"
             done
 
+            if [ $display_lines -eq 1 ]; then
+                echo -n "$line_number "
+                let line_number=$line_number+1
+            fi
+
             echo -e "$line"
-        done < "$file" | cat $cat_mods | tail -n $position_bottom | head -n $size
+        done < "$file" | tail -n $position_bottom | head -n $size
     else
         echo "El chat desapareció inesperadamente"
         exit 2
@@ -134,6 +153,7 @@ function down() {
 function top() {
     while true; do
         tmux wait TOP
+        size=$(cat $size_file)
         let upread=$(wc -l < "$file")/$size+1
         echo $upread > $upread_file
         refresh
@@ -152,18 +172,15 @@ function lines() {
     while true; do
         tmux wait LINES
 
-        mods=$(head -n 1 "$cat_mods_file")
+        lines=$(cat "$display_lines_file")
 
-        regex=".*-b.*"
-        if [[ $mods =~ $regex ]]; then
-            # Remove the -b from the file
-            mods=${mods//-b/}
-            mods=${mods//  / } # Reduce double spaces
-            echo $mods > $cat_mods_file
+        if [ $lines -eq 0 ]; then
+            lines=1
         else
-            echo "$mods -b" > $cat_mods_file
+            lines=0
         fi
         
+        echo $lines > $display_lines_file
         refresh
     done
 }
@@ -183,8 +200,15 @@ while true; do
     if [ "$key" = "/" ]; then
         read -e -i "/" input
 
+        resize_regex="^/resize ([1-9][0-9]*)$"
+
         if [ "$input" = "/update" ]; then
             echo -e "Lol, not implemented ;)"
+        
+        elif [[ "$input" =~ $resize_regex ]]; then
+            size=${input#* }
+            echo $size > $size_file
+            refresh
         
         elif [ "$input" = "/refresh" ]; then
             refresh
