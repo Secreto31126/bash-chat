@@ -70,6 +70,9 @@ if [ "$chat" = "--update" ] || [ "$settings_updates_auto" = "true" ]; then
 fi
 
 file="./$chat.yml"
+if [ -n "settings_chat_path" ]; then
+    file="$settings_chat_path/$chat.yml"
+fi
 
 name="$2"
 if [ -z "$name" ]; then
