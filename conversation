@@ -94,7 +94,7 @@ exit - Salir del chat
 /lines - Mostrar el número de línea de cada mensaje
 /react [n] [emoji] - Reaccionar con un emoji al mensaje en la línea n
 /[r/g/c/p][mensaje] - Cambia el color del mensaje
-//[mensaje] - Cambia el color del texto a su color original
+//[mensaje] - Cambia el color del texto al color original
 /help - Muestra este mensaje de ayuda
         "
         tmux wait HIDE_HELP
