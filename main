@@ -26,19 +26,21 @@ function update() {
     git pull
 }
 
-function setup() {
+function file_setup() {
     # If file $path exists
-    if [ -f $file ]; then
+    if [ -f $chat_file ]; then
         # If the first line is #/bin/chat, then read it
-        if [ "$(head -n 1 $file)" != "#/bin/chat $chat" ]; then
+        if [ "$(head -n 1 $chat_file)" != "#/bin/chat $chat" ]; then
             # If the first line is not #/bin/chat, then show error
-            echo "Error: El archivo $file existe y no es un chat. Por razones de seguridad no se abrirá ni editará." 1>&2
+            echo "Error: The file $chat_file exists and it isn't a chat. For security meassures it won't be open or edited." 1>&2
+            echo "If you think the file should be open, try running \"sed -i 's/\r$//' $chat_file\" to remove Windows trash from the file" 1>&2
             exit 1
         fi
     else
         # If the file does not exist, then create it
         echo "Setting up chat $chat"
-        echo "#/bin/chat $chat" > $file
+        install -D /dev/null $chat_file
+        echo "#/bin/chat $chat" > $chat_file
     fi
 }
 
@@ -47,8 +49,8 @@ function layout() {
 
     tmux has-session -t $session 2>/dev/null
     if [ $? -ne 0 ]; then
-        tmux new -d -s $session -n "$chat" "./conversation $file"
-        tmux split-window -l 1 "./textbar $name $file $color; tmux kill-session -t $session"
+        tmux new -d -s $session -n "$chat" "./conversation $chat_file $display_size $display_cat_mods_file"
+        tmux split-window -l 1 "./textbar $name $chat_file $color; tmux kill-session -t $session"
     fi
 
     tmux attach-session -t $session
@@ -69,9 +71,9 @@ if [ "$chat" = "--update" ] || [ "$settings_updates_auto" = "true" ]; then
     fi
 fi
 
-file="./$chat.yml"
+chat_file="./$chat.yml"
 if [ -n "settings_chat_path" ]; then
-    file="$settings_chat_path/$chat.yml"
+    chat_file="$settings_chat_path/$chat.yml"
 fi
 
 name="$2"
@@ -92,6 +94,18 @@ if [ -z "$color" ]; then
     color="/c"
 fi
 
-setup
+display_size=0
+if [ -n "$settings_display_size" ]; then
+    display_size="$settings_display_size"
+fi
+
+display_cat_mods=""
+display_cat_mods_file=$(mktemp)
+if [ "$settings_display_numbers" = "true" ]; then
+    display_cat_mods="$display_cat_mods -b"
+    echo "$display_cat_mods" > "$display_cat_mods_file"
+fi
+
+file_setup
 
 layout

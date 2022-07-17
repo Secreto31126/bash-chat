@@ -100,10 +100,14 @@ function main() {
             tmux wait -S BOTTOM
             continue
         
+        elif [ "$message" = "/lines" ]; then
+            tmux wait -S LINES
+            continue
+        
         elif [[ "$message" =~ $reaction_regex ]]; then
             number=$(echo $message | awk '{print $2}')
             reaction=$(echo $message | awk '{print $3}')
-            
+
             length=${#reaction}
             if [ $length -eq 1 ] || [ $length -eq 2 ]; then
                 sed -i "${number}s/$/$reaction /" $path
@@ -143,8 +147,8 @@ function main() {
             update=1
             break
         
-        elif [ "$message" = "/insecure" ]; then
-            echo "Ctrl + B -> k -> /insecure"
+        elif [ "$message" = "/display" ]; then
+            echo "Ctrl + B -> k -> /[command]"
             read -n 1 -s
             continue
         

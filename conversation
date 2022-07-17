@@ -3,29 +3,43 @@
 # The chat file
 file="$1"
 
-# Show as many lines as they fit in the screen
-size=$(tput lines)
+# The number of lines to display
+size="$2"
 
-# If size is undefined, default to 20
-echo Lines should be: $size
-if [ -z "$size" ]; then
-    size=12
+# If 0, show as many lines as they fit in the screen
+if [ $size -eq 0 ]; then
+    size=$(tput lines)
 fi
 
-# Will show higger lines/older messages, stored in a tmp file for global access
-upread_file=$(mktemp)
-echo 1 > $upread_file
+# If size is undefined, default to 20
+if [ -z "$size" ]; then
+    size=20
+fi
 
 # Mods
-insecure=0
+# Will show higger lines/older messages, stored in a tmp file for global access
+upread_file=$(mktemp)
+echo 1 > "$upread_file"
+
+# It will modify the chat output to the display
+cat_mods_file="$3"
 
 function refresh() {
     clear
     
     # Read and show the chat
     if [ -f "$file" ]; then
-        upread=$(cat $upread_file)
-        let position_bottom=$upread*$size
+        upread=$(cat "$upread_file")
+        let position_bottom=$upread*$size-4 # It will hopefully offset the reactions lines
+
+        if [ -z "$position_bottom" ]; then
+            echo "Woops, something went wrong. If you have a settings.yml, make sure the file is in LF and not CRLF." 1>&2
+            echo "To fix this, you can run \"sed -i 's/\r$//' settings.yml\" in your shell." 1>&2
+            read -s -n 1
+            exit 1
+        fi
+
+        cat_mods=$(head -n 1 "$cat_mods_file")
         
         while read -r line; do
             # Prevent echoing empty lines, should not happen
@@ -38,12 +52,8 @@ function refresh() {
                 line=${line::-2}
             done
 
-            if [ "$insecure" -eq 1 ]; then
-                echo -e $line
-            else
-                echo -e "$line"
-            fi
-        done < "$file" | tail -n $position_bottom | head -n $size
+            echo -e "$line"
+        done < "$file" | cat $cat_mods | tail -n $position_bottom | head -n $size
     else
         echo "El chat desapareció inesperadamente"
         exit 2
@@ -76,15 +86,16 @@ function help() {
     while true; do
         tmux wait SHOW_HELP
         echo "
-        exit - Salir del chat
-        /up - Subir una página
-        /down - Bajar una página
-        /top - Ir al principio
-        /bottom - Ir al final
-        /reaction [n] [emoji] - Reaccionar con un emoji
-        /[r/g/c/p][mensaje] - Cambia el color del mensaje
-        //[mensaje] - Cambia el color del texto a su color original
-        /help - Muestra este mensaje de ayuda
+exit - Salir del chat
+/up - Subir una página
+/down - Bajar una página
+/top - Ir al principio
+/bottom - Ir al final
+/lines - Mostrar el número de línea de cada mensaje
+/react [n] [emoji] - Reaccionar con un emoji al mensaje en la línea n
+/[r/g/c/p][mensaje] - Cambia el color del mensaje
+//[mensaje] - Cambia el color del texto a su color original
+/help - Muestra este mensaje de ayuda
         "
         tmux wait HIDE_HELP
         refresh
@@ -137,6 +148,27 @@ function bottom() {
     done
 }
 
+function lines() {
+    while true; do
+        tmux wait LINES
+
+        mods=$(head -n 1 "$cat_mods_file")
+
+        regex=".*-b.*"
+        if [[ $mods =~ $regex ]]; then
+            # Remove the -b from the file
+            mods=${mods//-b/}
+            mods=${mods//  / } # Reduce double spaces
+            echo $mods > $cat_mods_file
+        else
+            echo "$mods -b" > $cat_mods_file
+        fi
+        
+        refresh
+    done
+}
+
+# Check if there's any tmux session running
 auto &
 manual &
 help &
@@ -144,6 +176,7 @@ up &
 down &
 top &
 bottom &
+lines &
 
 while true; do
     read -n 1 -s key
@@ -152,20 +185,10 @@ while true; do
 
         if [ "$input" = "/update" ]; then
             echo -e "Lol, not implemented ;)"
-        elif [ "$input" = "/insecure" ]; then
-            echo -e "\033[1;31mWARNING:\033[0m Insecure mode allows other people to run commands in your name."
-            echo "It can be funny, but also dangerous."
-            read -n 1 -p "Press Y to activate, press any other key to cancel " key
-            echo
-            if [ "$key" = "y" ]; then
-                echo -e "Insecure mode \033[1;32mactivated\033[0m. To disable it, exit the chat."
-                insecure=1
-            else
-                echo "Insecure mode cancelled."
-            fi
-            echo -n "To go back to the chat bar, press Ctrl + B -> J. "
-            read -p "Press any key to continue" -n 1 -s key
+        
+        elif [ "$input" = "/refresh" ]; then
             refresh
+
         fi
     else
         break
