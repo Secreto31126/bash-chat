@@ -7,12 +7,9 @@ color="$4"
 display_size="$5"
 display_lines="$6"
 
-window="$session:1"
+tmux kill-session   -t $session
 
-tmux kill-session -t $session
-tmux new -d -x $COLUMNS -y $LINES -s "$session"
-
-tmux new-window		-t "$window"	-n "Chat"	-d	"echo display; bash"#"./display $chat_file $display_size $display_lines"
-tmux split-window	-t "$window"	-h -l 1		-d	"echo textbar; bash"#"./textbar $name $chat_file $color; tmux kill-session -t $session"
+tmux new-session	-d		-s "$session"	"./display $chat_file $display_size $display_lines"
+tmux split-window	-l 1	-t "$session"	"./textbar $name $chat_file $color; tmux kill-session -t $session"
 
 tmux attach-session	-t "$session"
