@@ -8,12 +8,12 @@ file="$1"
 display_size="$2"
 
 # If 0, show as many lines as they fit in the screen
-if [ $display_size -eq 0 ]; then
-    size=$(tput lines)
+if [ "$display_size" -eq 0 ]; then
+    display_size=$(tput lines)
 fi
 
 # If size is still undefined, default to 20
-if [ -z "$display_size" ]; then
+if [ -z "$display_size" ] || [ "$display_size" -le 0 ]; then
     display_size=20
 fi
 
