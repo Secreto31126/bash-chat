@@ -74,8 +74,7 @@ if [ "$chat" = "--update" ] || [ "$settings_updates_auto" = "true" ]; then
 fi
 
 chat_file="./$chat.yml"
-if [ -n "settings_chat_path" ]; then
-    echo $settings_chat_path
+if [ -n "$settings_chat_path" ]; then
     chat_file="$settings_chat_path/$chat.yml"
 fi
 
