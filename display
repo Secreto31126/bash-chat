@@ -47,15 +47,12 @@ function refresh() {
         fi
 
         line_number=1
-        if [ "$display_lines" -eq 1 ]; then
-            total_lines=$(wc -l < "$file")
-            let line_number=$total_lines-$position_bottom
-            if [ $line_number -lt 1 ]; then
-                line_number=1
-            fi
-        fi
         
-        echo $line_number
+#         echo "upread: $upread
+# size: $size
+# position_bottom (upread * size): $position_bottom
+# total_lines: $total_lines
+# line_number (total_lines - position_bottom): $line_number" > "./debug.log"
 
         while read -r line; do
             # Prevent echoing empty lines, should not happen
@@ -68,10 +65,11 @@ function refresh() {
                 line="${line::-2}"
             done
 
-            if [ $display_lines -eq 1 ]; then
+            # echo "$line_number $line" >> "./debug.log"
+            if [ $display_lines -eq 1 ] && [ $line_number -ne 1 ]; then
                 echo -n "$line_number "
-                let line_number=$line_number+1
             fi
+            let line_number=$line_number+1
 
             echo -e "$line"
         done < "$file" | tail -n $position_bottom | head -n $size

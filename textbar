@@ -148,9 +148,8 @@ function main() {
             break
         
         elif [ "$message" = "/display" ]; then
-            tmux select-pane -t "display"
-            echo "Ctrl + B -> k -> /[command]"
-            read -n 1 -s
+            # tmux select-pane -t "display"
+            read -n 1 -s -p "Ctrl + B -> (arrow up) -> /[command]"
             continue
         
         fi

@@ -7,6 +7,6 @@ echo "exit - Salir del chat
 /bottom - Ir al final
 /lines - Mostrar el número de línea de cada mensaje
 /react [n] [emoji] - Reaccionar con un emoji al mensaje en la línea n
-/[r/g/c/p][mensaje] - Cambia el color del mensaje
+/[r|g|c|p][mensaje] - Cambia el color del mensaje
 //[mensaje] - Cambia el color del texto al color original
 /help - Muestra este mensaje de ayuda"
