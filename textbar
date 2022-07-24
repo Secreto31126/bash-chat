@@ -71,7 +71,7 @@ function main() {
         history -s "$message"
 
         reaction_regex="^/react ([2-9]|[1-9][0-9]+) .{1,2}$"
-        rainbow_regex="^/rainbow *$"
+        rainbow_regex="^/rainbow .*$"
         delete_regex="^/deleteAll( [Yy])?$"
 
         if [ "$message" = "exit" ]; then
