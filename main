@@ -24,6 +24,7 @@ function parse_yaml() {
 
 function update() {
     # git stash
+    git checkout $branch
     git pull
 }
 
@@ -64,6 +65,11 @@ fi
 
 if [ -f "settings.yml" ]; then
     eval $(parse_yaml settings.yml "settings_")
+fi
+
+branch="master"
+if [ -n "$settings_updates_branch" ]; then
+    branch=$settings_updates_branch
 fi
 
 if [ "$chat" = "--update" ] || [ "$settings_updates_auto" = "true" ]; then
