@@ -9,7 +9,7 @@ display_lines="$6"
 
 # tmux kill-session   -t $session
 
-tmux new-session	-d		-s "$session"	"./display $chat_file $display_size $display_lines"
-tmux split-window	-l 1	-t "$session"	"./textbar $name $chat_file $color; tmux kill-session -t $session"
+tmux new-session	-d		-s "$session"	"bash ./display $chat_file $display_size $display_lines"
+tmux split-window	-l 1	-t "$session"	"bash ./textbar $name $chat_file $color; tmux kill-session -t $session"
 
 tmux attach-session	-t "$session"

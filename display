@@ -105,7 +105,7 @@ function help() {
     while true; do
         tmux wait SHOW_HELP
         clear
-        ./help
+        bash ./help
         tmux wait HIDE_HELP
         refresh
     done

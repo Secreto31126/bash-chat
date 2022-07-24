@@ -23,6 +23,7 @@ function parse_yaml() {
 }
 
 function update() {
+    # git stash
     git pull
 }
 
@@ -49,7 +50,7 @@ function layout() {
 
     tmux has-session -t $session 2>/dev/null
     if [ $? -ne 0 ]; then
-        ./layout $session $chat_file $name $color $display_size $display_lines
+        bash ./layout $session $chat_file $name $color $display_size $display_lines
     fi
 
     tmux attach-session -t $session
