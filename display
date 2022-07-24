@@ -198,7 +198,8 @@ while true; do
             echo -e "Lol, not implemented ;)"
         
         elif [[ "$input" =~ $resize_regex ]]; then
-            size=${input//\/resize /}
+            size="${input//\/resize/}"
+            echo $size > ./debug.log
             if [ -z "$size" ]; then
                 size=$(tput lines)
             fi
