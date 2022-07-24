@@ -177,7 +177,6 @@ function lines() {
     done
 }
 
-# Check if there's any tmux session running
 auto &
 manual &
 help &
