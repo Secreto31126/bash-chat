@@ -61,7 +61,9 @@ if [ -z "$chat" ] || [ "$chat" = "--help" ]; then
     exit 1
 fi
 
-eval $(parse_yaml settings.yml "settings_")
+if [ -f "settings.yml" ]; then
+    eval $(parse_yaml settings.yml "settings_")
+fi
 
 if [ "$chat" = "--update" ] || [ "$settings_updates_auto" = "true" ]; then
     update
@@ -74,6 +76,7 @@ chat_file="./$chat.yml"
 if [ -n "settings_chat_path" ]; then
     chat_file="$settings_chat_path/$chat.yml"
 fi
+echo $settings_chat_path
 
 name="$2"
 if [ -z "$name" ]; then
