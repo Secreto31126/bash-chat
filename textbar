@@ -118,7 +118,7 @@ function main() {
             continue
         
         elif [[ "$message" =~ $rainbow_regex ]]; then
-            message="${message/"/rainbow "/}"
+            message="${message//\/rainbow /}"
             message=$(rainbow "$message")
         
         elif [[ "$message" =~ $delete_regex ]]; then
