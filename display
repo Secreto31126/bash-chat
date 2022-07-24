@@ -39,7 +39,7 @@ function refresh() {
 
         let position_bottom=$upread*$size
 
-        if [ -z "$position_bottom" ]; then
+        if [ "$position_bottom" -lt 1 ]; then
             echo "Woops, something went wrong. If you have a settings.yml, make sure the file is in LF and not CRLF." 1>&2
             echo "To fix this, you can run \"sed -i 's/\r$//' settings.yml\" in your shell." 1>&2
             read -s -n 1
@@ -47,13 +47,15 @@ function refresh() {
         fi
 
         line_number=1
-        if [ $display_lines -eq 1 ]; then
+        if [ "$display_lines" -eq 1 ]; then
             total_lines=$(wc -l < "$file")
             let line_number=$total_lines-$position_bottom
-            if [ $line_number -le 0 ]; then
+            if [ $line_number -lt 1 ]; then
                 line_number=1
             fi
         fi
+        
+        echo $line_number
 
         while read -r line; do
             # Prevent echoing empty lines, should not happen
@@ -104,18 +106,8 @@ function manual() {
 function help() {
     while true; do
         tmux wait SHOW_HELP
-        echo "
-exit - Salir del chat
-/up - Subir una página
-/down - Bajar una página
-/top - Ir al principio
-/bottom - Ir al final
-/lines - Mostrar el número de línea de cada mensaje
-/react [n] [emoji] - Reaccionar con un emoji al mensaje en la línea n
-/[r/g/c/p][mensaje] - Cambia el color del mensaje
-//[mensaje] - Cambia el color del texto al color original
-/help - Muestra este mensaje de ayuda
-        "
+        clear
+        ./help
         tmux wait HIDE_HELP
         refresh
     done
@@ -125,7 +117,9 @@ function up() {
     while true; do
         tmux wait UP
 
+        size=$(cat "$size_file")
         upread=$(cat $upread_file)
+
         let space_left=$(wc -l < "$file")-$upread*$size
 
         if [ $space_left -gt 0 ]; then

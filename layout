@@ -7,7 +7,7 @@ color="$4"
 display_size="$5"
 display_lines="$6"
 
-tmux kill-session   -t $session
+# tmux kill-session   -t $session
 
 tmux new-session	-d		-s "$session"	"./display $chat_file $display_size $display_lines"
 tmux split-window	-l 1	-t "$session"	"./textbar $name $chat_file $color; tmux kill-session -t $session"
