@@ -1,5 +1,5 @@
-*.yml
-chat*
+chats/
 test
+*.yml
 *.log
 *.tmp
