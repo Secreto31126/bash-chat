@@ -192,13 +192,17 @@ while true; do
     if [ "$key" = "/" ]; then
         read -e -i "/" input
 
-        resize_regex="^/resize ([1-9][0-9]*)$"
+        resize_regex="^/resize( [1-9][0-9]*)?$"
 
         if [ "$input" = "/update" ]; then
             echo -e "Lol, not implemented ;)"
         
         elif [[ "$input" =~ $resize_regex ]]; then
-            size=${input#* }
+            size=${input/\/resize /}
+            if [ -z "$size" ]; then
+                size=$(tput lines)
+            fi
+            
             echo $size > $size_file
             refresh
         
