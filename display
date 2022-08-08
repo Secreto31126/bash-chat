@@ -222,7 +222,7 @@ while true; do
         read -e -i "/" input
 
         resize_regex="^/resize( [1-9][0-9]*)?$"
-        rate_regex="^/rate [1-9][0-9]*$"
+        rate_regex="^/rate [0-9]+$"
 
         if [ "$input" = "/update" ]; then
             echo -e "Lol, not implemented ;)"
