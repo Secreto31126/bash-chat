@@ -19,7 +19,7 @@ INVISIBLE='\033[8m'
 NC='\033[0m' # No Color
 
 function send_message() {
-    curl -s -d "$1" -X POST "$server/$chat" > ./debug.log
+    curl -S -d "$1" -X POST "$server/$chat" 2> /dev/null > ./debug.log
 }
 
 function color() {

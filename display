@@ -45,7 +45,9 @@ function refresh() {
     fi
     
     # Read from the server and show the chat
-    curl "$server/$chat" > "$file"
+    if [ -z "$1" ]; then
+        curl -S "$server/$chat" 2> /dev/null > "$file"
+    fi
 
     initial_count=$(cat "$chat_lines_file")
     count=$(wc -l < $file)
@@ -137,7 +139,7 @@ function help() {
         clear
         bash ./help
         tmux wait HIDE_HELP
-        refresh
+        refresh "false"
     done
 }
 
@@ -153,7 +155,7 @@ function up() {
         if [ $space_left -gt 0 ]; then
             let upread=$upread+1
             echo $upread > $upread_file
-            refresh
+            refresh "false"
         fi
     done
 }
@@ -167,7 +169,7 @@ function down() {
         if [ $upread -gt 1 ]; then
             let upread=$upread-1
             echo $upread > $upread_file
-            refresh
+            refresh "false"
         fi
     done
 }
@@ -178,7 +180,7 @@ function top() {
         size=$(cat $size_file)
         let upread=$(wc -l < "$file")/$size+1
         echo $upread > $upread_file
-        refresh
+        refresh "false"
     done
 }
 
@@ -186,7 +188,7 @@ function bottom() {
     while true; do
         tmux wait BOTTOM
         echo 1 > $upread_file
-        refresh
+        refresh "false"
     done
 }
 
@@ -203,7 +205,7 @@ function lines() {
         fi
         
         echo $lines > $display_lines_file
-        refresh
+        refresh "false"
     done
 }
 
