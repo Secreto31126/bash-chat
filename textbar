@@ -158,7 +158,7 @@ function main() {
 
         # If string is not empty, write to chat
         if [ -n "$message" ]; then
-            message=$(cool "$color$name//: $message")
+            message=$(cool "$color$name//: $message//")
             send_message "$message"
         fi
 
@@ -167,8 +167,8 @@ function main() {
     done
 }
 
-send_message "$(color "$color$name//: Joined the chat")\\n"
+send_message "$(color "$color$name//: Joined the chat")"
 
 main
 
-send_message "$(color "$color$name//: Left the chat")\\n"
+send_message "$(color "$color$name//: Left the chat")"
