@@ -42,7 +42,7 @@ function file_setup() {
         # If the file does not exist, then create it
         echo "Setting up chat $chat"
         install -D /dev/null $chat_file
-        echo "#/bin/chat $chat" > $chat_file
+        # echo "#/bin/chat $chat" > $chat_file
     fi
 }
 
@@ -51,7 +51,7 @@ function layout() {
 
     tmux has-session -t $session 2>/dev/null
     if [ $? -ne 0 ]; then
-        bash ./layout $session $chat_file $name $color $display_size $display_lines
+        bash ./layout $session $chat $chat_file $name $server $color $display_size $display_lines $refresh_rate
     fi
 
     tmux attach-session -t $session
@@ -97,6 +97,11 @@ fi
 chat="${chat// /_}"
 name="${name// /_}"
 
+server="https://pico.secreto31126.repl.co"
+if [ -n "$settings_server_domain" ]; then
+    server="$settings_server_domain"
+fi
+
 color="$settings_name_color"
 if [ -z "$color" ]; then
     color="/c"
@@ -110,6 +115,12 @@ fi
 display_lines=0
 if [ "$settings_display_numbers" = "true" ]; then
     display_lines=1
+fi
+
+refresh_rate=10
+number_regex="^[0-9]+$"
+if [[ $settings_refresh_rate =~ $number_regex ]]; then
+    refresh_rate=$settings_display_refresh_rate
 fi
 
 file_setup

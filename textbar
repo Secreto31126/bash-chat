@@ -1,8 +1,9 @@
 #!/bin/bash
 
 name="$1"
-path="$2"
-color="$3"
+chat="$2"
+server="$3"
+color="$4"
 
 BLACK='\033[0;30m'
 BLACK_BOLD='\033[1;30m'
@@ -16,6 +17,10 @@ CYAN='\033[0;36m'
 CYAN_BOLD='\033[1;36m'
 INVISIBLE='\033[8m'
 NC='\033[0m' # No Color
+
+function send_message() {
+    curl -s -d "$1" -X POST "$server/$chat" > ./debug.log
+}
 
 function color() {
     i=$1
@@ -60,9 +65,6 @@ function cool() {
     echo $string
 }
 
-# Moddifiers
-update=0
-
 function main() {
     while true; do
         clear
@@ -105,47 +107,47 @@ function main() {
             continue
         
         elif [[ "$message" =~ $reaction_regex ]]; then
-            number=$(echo $message | awk '{print $2}')
-            reaction=$(echo $message | awk '{print $3}')
+            echo "Not implemented for online branch"
 
-            length=${#reaction}
-            if [ $length -eq 1 ] || [ $length -eq 2 ]; then
-                sed -i "${number}s/$/$reaction /" $path
-            else
-                echo -n "Invalid reaction, it must be 1 or 2 characters long"
-                read -n 1 -s
-            fi
-            continue
+            # number=$(echo $message | awk '{print $2}')
+            # reaction=$(echo $message | awk '{print $3}')
+
+            # length=${#reaction}
+            # if [ $length -eq 1 ] || [ $length -eq 2 ]; then
+            #     sed -i "${number}s/$/$reaction /" $path
+            # else
+            #     echo -n "Invalid reaction, it must be 1 or 2 characters long"
+            #     read -n 1 -s
+            # fi
+            # continue
         
         elif [[ "$message" =~ $rainbow_regex ]]; then
             message="${message//\/rainbow /}"
             message=$(rainbow "$message")
         
         elif [[ "$message" =~ $delete_regex ]]; then
-            delete=1
-            if [ "$message" = "/deleteAll" ]; then # The simplest way to check if it doesn't have a second argument
-                clear
-                echo -n "You are about to delete the whole chat history for everyone. "
-                read -p "Are you sure you want to proceed? (y/N) " -n 1 -r
-                if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-                    delete=0
-                fi
-            fi
+            echo "Not implemented for online branch"
 
-            # This won't be run if the second argument is not "[yY]" because it wouldn't match the first regex
-            if [ $delete -eq 1 ]; then
-                header=$(head -n 1 $path)
-                echo $header > $path
-                message="Chat history /rdeleted//"
-            else
-                echo -ne "\nCanceled."
-                read -n 1 -s
-                continue
-            fi
-        
-        elif [ "$message" = "/update" ]; then
-            update=1
-            break
+            # delete=1
+            # if [ "$message" = "/deleteAll" ]; then # The simplest way to check if it doesn't have a second argument
+            #     clear
+            #     echo -n "You are about to delete the whole chat history for everyone. "
+            #     read -p "Are you sure you want to proceed? (y/N) " -n 1 -r
+            #     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            #         delete=0
+            #     fi
+            # fi
+
+            # # This won't be run if the second argument is not "[yY]" because it wouldn't match the first regex
+            # if [ $delete -eq 1 ]; then
+            #     header=$(head -n 1 $path)
+            #     echo $header > $path
+            #     message="Chat history /rdeleted//"
+            # else
+            #     echo -ne "\nCanceled."
+            #     read -n 1 -s
+            #     continue
+            # fi
         
         elif [ "$message" = "/display" ]; then
             # tmux select-pane -t "display"
@@ -157,7 +159,7 @@ function main() {
         # If string is not empty, write to chat
         if [ -n "$message" ]; then
             message=$(cool "$color$name//: $message")
-            echo "$message$NC\\n" >> $path
+            send_message "$message"
         fi
 
         # Send a trigger to the chat window to refresh
@@ -165,16 +167,8 @@ function main() {
     done
 }
 
-echo "$(color "$color$name//: Joined the chat")\\n" >> $path
+send_message "$(color "$color$name//: Joined the chat")\\n"
 
 main
 
-if [ -f $path ]; then
-    echo "$(color "$color$name//: Left the chat")\\n" >> $path
-fi
-
-if [ $update -eq 1 ]; then
-    # $0 $name $path
-    # tmux wait -S UPDATE
-    echo "Deprecated :)"
-fi
+send_message "$(color "$color$name//: Left the chat")\\n"

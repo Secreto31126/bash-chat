@@ -1,11 +1,13 @@
 #!/bin/bash
 
-# The chat file
-file="$1"
+# The chat name, file and server
+chat="$1"
+file="$2"
+server="$3"
 
 # Modifiers
 # The number of lines to display
-display_size="$2"
+display_size="$4"
 
 # If 0, show as many lines as they fit in the screen
 if [ "$display_size" -eq 0 ]; then
@@ -26,13 +28,33 @@ echo 1 > "$upread_file"
 
 # Shows or hides the number of each line
 display_lines_file=$(mktemp)
-echo "$3" > "$display_lines_file"
+echo "$5" > "$display_lines_file"
+
+# Save the auto refresh rate
+refresh_rate_file=$(mktemp)
+echo "$6" > "$refresh_rate_file"
+
+# The number of lines of the chat file
+chat_lines_file=$(mktemp)
+echo $(wc -l < "$file") > "$chat_lines_file"
 
 function refresh() {
-    clear
+    if [ ! -f "$file" ]; then
+        echo "El chat desapareció inesperadamente"
+        exit 2
+    fi
     
-    # Read and show the chat
-    if [ -f "$file" ]; then
+    # Read from the server and show the chat
+    curl "$server/$chat" > "$file"
+
+    initial_count=$(cat "$chat_lines_file")
+    count=$(wc -l < $file)
+
+    if [ $count -gt $initial_count ]; then
+        echo $count > "$chat_lines_file"
+        
+        clear
+
         upread=$(cat "$upread_file")
         size=$(cat "$size_file")
         display_lines=$(cat "$display_lines_file")
@@ -48,11 +70,11 @@ function refresh() {
 
         line_number=1
         
-#         echo "upread: $upread
-# size: $size
-# position_bottom (upread * size): $position_bottom
-# total_lines: $total_lines
-# line_number (total_lines - position_bottom): $line_number" > "./debug.log"
+    #     echo "upread: $upread
+    # size: $size
+    # position_bottom (upread * size): $position_bottom
+    # total_lines: $total_lines
+    # line_number (total_lines - position_bottom): $line_number" > "./debug.log"
 
         while read -r line; do
             # Prevent echoing empty lines, should not happen
@@ -73,24 +95,32 @@ function refresh() {
 
             echo -e "$line"
         done < "$file" | tail -n $position_bottom | head -n $size
-    else
-        echo "El chat desapareció inesperadamente"
-        exit 2
     fi
+
 }
 
 function auto() {
     initial_count=0
-    while true; do
-        count=$(wc -l < $file)
 
-        if [ $count -gt $initial_count ]; then
-            initial_count=$count
-            refresh
-            if [ $? -eq 2 ]; then break; fi
+    while true; do
+        sleep_time=$(cat "$refresh_rate_file")
+
+        if [ $sleep_time -eq 0 ]; then
+            sleep 60
+            continue
         fi
 
-        sleep 5
+        # count=$(wc -l < $file)
+
+        # if [ $count -gt $initial_count ]; then
+        #     initial_count=$count
+        #     refresh
+        #     if [ $? -eq 2 ]; then break; fi
+        # fi
+
+        refresh
+
+        sleep $sleep_time
     done
 }
 
@@ -192,19 +222,30 @@ while true; do
         read -e -i "/" input
 
         resize_regex="^/resize( [1-9][0-9]*)?$"
+        rate_regex="^/rate [1-9][0-9]*$"
 
         if [ "$input" = "/update" ]; then
             echo -e "Lol, not implemented ;)"
         
         elif [[ "$input" =~ $resize_regex ]]; then
             size="${input//\/resize/}"
-            echo $size > ./debug.log
             if [ -z "$size" ]; then
                 size=$(tput lines)
             fi
 
             echo $size > $size_file
             refresh
+
+        elif [[ "$input" =~ $rate_regex ]]; then
+            old_rate=$(cat "$refresh_rate_file")
+            rate="${input//\/rate/}"
+            echo $rate > $refresh_rate_file
+            refresh
+            if [ $rate -eq 0 ]; then
+                echo "Auto refresh disabled"
+            elif [ $old_rate -eq 0 ]; then
+                echo "The new refresh rate will be applied in less than a minute."
+            fi
         
         elif [ "$input" = "/refresh" ]; then
             refresh

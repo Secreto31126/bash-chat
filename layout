@@ -1,15 +1,18 @@
 #!/bin/bash
 
 session="$1"
-chat_file="$2"
-name="$3"
-color="$4"
-display_size="$5"
-display_lines="$6"
+chat="$2"
+chat_file="$3"
+name="$4"
+server="$5"
+color="$6"
+display_size="$7"
+display_lines="$8"
+refresh_rate="$9"
 
 # tmux kill-session   -t $session
 
-tmux new-session	-d		-s "$session"	"bash ./display $chat_file $display_size $display_lines"
-tmux split-window	-l 1	-t "$session"	"bash ./textbar $name $chat_file $color; tmux kill-session -t $session"
+tmux new-session	-d		-s "$session"	"bash ./display $chat $chat_file $server $display_size $display_lines $refresh_rate"
+tmux split-window	-l 1	-t "$session"	"bash ./textbar $name $chat $server $color; tmux kill-session -t $session"
 
 tmux attach-session	-t "$session"
