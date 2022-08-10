@@ -23,7 +23,9 @@ function parse_yaml() {
 }
 
 function update() {
-    # git stash
+    if [ -n "$1" ]; then
+        git stash
+    fi
     git checkout $branch
     git pull
 }
@@ -73,7 +75,7 @@ if [ -n "$settings_updates_branch" ]; then
 fi
 
 if [ "$chat" = "--update" ] || [ "$settings_updates_auto" = "true" ]; then
-    update
+    update $settings_updates_stash
     if [ "$chat" = "--update" ]; then
         exit 0
     fi
