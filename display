@@ -43,14 +43,14 @@ function refresh() {
         echo "El chat desapareció inesperadamente"
         exit 2
     fi
-    
-    # Read from the server and show the chat
-    if [ -z "$1" ]; then
-        curl -S "$server/$chat" 2> /dev/null > "$file"
-    fi
 
     initial_count=$(cat "$chat_lines_file")
     count=$(wc -l < $file)
+    
+    # Read from the server and show the chat
+    if [ -z "$1" ]; then # If the function is called with arguments, only do a local refresh
+        curl -S "$server/$chat?$count" 2> /dev/null >> "$file"
+    fi
 
     if [ $count -gt $initial_count ]; then
         echo $count > "$chat_lines_file"
