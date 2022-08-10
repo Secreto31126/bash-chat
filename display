@@ -85,14 +85,14 @@ function refresh() {
             fi
 
             let line_number=$line_number+1
-            
+
             trailing_new_line_regex="\n$"
             while [[ "$line" =~ $trailing_new_line_regex ]]; do
                 line="${line::-2}"
             done
 
             # If you can't fix it server side, fix it on user's side
-            if [ "$lines" == "(null)" ]; then
+            if [ "$line" = "(null)" ]; then
                 continue
             fi
 
