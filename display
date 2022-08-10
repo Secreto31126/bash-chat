@@ -36,7 +36,7 @@ echo "$6" > "$refresh_rate_file"
 
 # The number of lines of the chat file
 chat_lines_file=$(mktemp)
-echo $(wc -l < "$file") > "$chat_lines_file"
+echo 0 > "$chat_lines_file"
 
 function refresh() {
     if [ ! -f "$file" ]; then
@@ -72,11 +72,11 @@ function refresh() {
 
         line_number=0
         
-    #     echo "upread: $upread
-    # size: $size
-    # position_bottom (upread * size): $position_bottom
-    # total_lines: $total_lines
-    # line_number (total_lines - position_bottom): $line_number" > "./debug.log"
+        echo "upread: $upread
+    size: $size
+    position_bottom (upread * size): $position_bottom
+    total_lines: $total_lines
+    line_number (total_lines - position_bottom): $line_number" > "./debug.log"
 
         while read -r line; do
             # Prevent echoing empty lines, should not happen
