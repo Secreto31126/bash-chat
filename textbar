@@ -159,7 +159,7 @@ function main() {
         # If string is not empty, write to chat
         if [ -n "$message" ]; then
             message=$(cool "$color$name//: $message")
-            send_message "$message"
+            send_message "$message\\n"
         fi
 
         # Send a trigger to the chat window to refresh
