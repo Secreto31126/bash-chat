@@ -163,6 +163,7 @@ function main() {
         fi
 
         # Send a trigger to the chat window to refresh
+        sleep 1
         tmux wait -S REFRESH
     done
 }
