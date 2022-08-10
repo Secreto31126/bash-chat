@@ -49,7 +49,12 @@ function refresh() {
     
     # Read from the server and show the chat
     if [ -z "$1" ]; then # If the function is called with arguments, only do a local refresh
-        curl -S "$server/$chat?$count" 2> /dev/null >> "$file"
+        # On first boot, rewrites the chat file with the latest version from the server
+        if [ -z "$initial_count" ]; then
+            curl -S "$server/$chat" 2> /dev/null > "$file"
+        else
+            curl -S "$server/$chat?$count" 2> /dev/null >> "$file"
+        fi
     fi
 
     if [ $count -gt $initial_count ]; then
