@@ -70,7 +70,7 @@ function refresh() {
             exit 1
         fi
 
-        line_number=1
+        line_number=0
         
     #     echo "upread: $upread
     # size: $size
@@ -84,16 +84,22 @@ function refresh() {
                 continue
             fi
 
+            let line_number=$line_number+1
+            
             trailing_new_line_regex="\n$"
             while [[ "$line" =~ $trailing_new_line_regex ]]; do
                 line="${line::-2}"
             done
 
+            # If you can't fix it server side, fix it on user's side
+            if [ "$lines" == "(null)" ]; then
+                continue
+            fi
+
             # echo "$line_number $line" >> "./debug.log"
             if [ $display_lines -eq 1 ] && [ $line_number -ne 1 ]; then
                 echo -n "$line_number "
             fi
-            let line_number=$line_number+1
 
             echo -e "$line"
         done < "$file" | tail -n $position_bottom | head -n $size
