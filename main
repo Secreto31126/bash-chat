@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Version 0.1"
+
 function chat_help() {
     echo "Uso: ./main <chat> [name]"
     echo "Ejemplo: chat.sh chat1 john"
